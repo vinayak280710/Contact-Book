@@ -409,11 +409,11 @@ def main():
 
         elif choice == "8":
             print(save_contacts()[1])
-            print("Goodbye!")
+            print("Goodbye !")
             break
 
         else:
-            print("Invalid option. Please enter a number from 1 to 8.")
+            print("Invalid option. Please enter a number from 1 to 8 only.")
 
 
 if __name__ == "__main__":
