@@ -60,9 +60,14 @@ def validate_email(email):
     """
     if " " in email or email.count("@") != 1:
         return False
-    local, domain = email.split("@")
-    return len(local) > 0 and "." in domain and not domain.startswith(".") \
-        and not domain.endswith(".")
+    username, server = email.split("@")
+    if len(username)==0:
+        return False
+    if "." not in server:
+        return False
+    if server.startswith(".") or server.endswith("."):
+        return False
+    return True
 
 
 # ----------------------------------------------------------------------
