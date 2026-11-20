@@ -65,7 +65,7 @@ def validate_email(email):
         return False
     if "." not in server:
         return False
-    if server.startswith(".") or server.endswith("."):
+    if server.startswith(".") or server.endswith("."):#startwith and endwith are string method which ckecks the place of "."in email
         return False
     return True
 
