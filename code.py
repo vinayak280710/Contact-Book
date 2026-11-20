@@ -79,7 +79,7 @@ def clean_name(name):
     >>> clean_name("  rohit   pandey ")
     'Rohit Pandey'
     """
-    return " ".join(name.split()).title()
+    return " ".join(name.split()).title()#join=it joints two or more words from the list giving a space in between
 
 
 def sorted_names():
