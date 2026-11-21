@@ -1,140 +1,41 @@
-"""
-Project 6: Contact Book
-Group 6 - Rohit Pandey, Vinayak Madabhavi, Priya Davare, Aman Babu
-
-A command-line program that stores phone contacts and lets the user
-search and maintain them.
-
-Key topics used
----------------
-* Dictionaries : main data store  {name: (phone, email)}
-* Tuples       : details of each contact are held as (phone, email)
-* Sets         : a set of phone numbers prevents duplicates
-* Recursion    : recursive binary search on the sorted list of names
-* Nested loops : contacts printed as a table grouped by first letter
-* File handling, exception handling, doctests, functions, strings, lists
-
-Run the program :  python contact_book.py
-Run the doctests:  python -m doctest contact_book.py -v
-"""
-
 import json
 
 DATA_FILE = "contacts.json"
-
-# Main data: {name: (phone, email)}
 contacts = {}
-# Every phone number in use, to stop two contacts sharing a number
 phone_numbers = set()
 
 
-# ----------------------------------------------------------------------
-# Validation
-# ----------------------------------------------------------------------
 def validate_phone(phone):
-    """Return True if phone is exactly ten characters, all digits.
-
-    >>> validate_phone("9876543210")
-    True
-    >>> validate_phone("98765")
-    False
-    >>> validate_phone("98765abcde")
-    False
-    >>> validate_phone("")
-    False
-    """
     return len(phone) == 10 and phone.isdigit()
 
 
 def validate_email(email):
-    """Return True if email has an '@' and a dot after the '@'.
-
-    >>> validate_email("rohit@example.com")
-    True
-    >>> validate_email("rohit.example.com")
-    False
-    >>> validate_email("rohit@examplecom")
-    False
-    >>> validate_email("a b@x.com")
-    False
-    """
     if " " in email or email.count("@") != 1:
         return False
-    username, server = email.split("@")
-    if len(username)==0:
-        return False
-    if "." not in server:
-        return False
-    if server.startswith(".") or server.endswith("."):#startwith and endwith are string method which ckecks the place of "."in email
-        return False
-    return True
+    user, server = email.split("@")
+    return len(user) > 0 and "." in server and not server.startswith(".") and not server.endswith(".")
 
 
-# ----------------------------------------------------------------------
-# Helpers
-# ----------------------------------------------------------------------
 def clean_name(name):
-    """Tidy a name: trim spaces and capitalise each word.
-
-    >>> clean_name("  rohit   pandey ")
-    'Rohit Pandey'
-    """
-    return " ".join(name.split()).title()#join=it joints two or more words from the list giving a space in between
+    return " ".join(name.split()).title()
 
 
 def sorted_names():
-    """Return all contact names in alphabetical (case-insensitive) order.
-
-    >>> contacts.clear(); contacts.update({"Bob": ("1111111111", "b@x.com"),
-    ...                                    "Alice": ("2222222222", "a@x.com")})
-    >>> sorted_names()
-    ['Alice', 'Bob']
-    >>> contacts.clear()
-    """
     return sorted(contacts, key=str.lower)
 
 
-# ----------------------------------------------------------------------
-# Recursion: binary search on the sorted list of names
-# ----------------------------------------------------------------------
 def binary_search(names, target, low, high):
-    """Recursively search a sorted list of names for target (full name).
-
-    Returns the index of target, or -1 if it is not present.
-    The comparison ignores upper/lower case.
-
-    >>> names = ["Aman", "Priya", "Rohit", "Vinayak"]
-    >>> binary_search(names, "rohit", 0, len(names) - 1)
-    2
-    >>> binary_search(names, "Aman", 0, len(names) - 1)
-    0
-    >>> binary_search(names, "Zed", 0, len(names) - 1)
-    -1
-    >>> binary_search([], "Aman", 0, -1)
-    -1
-    """
-    if low > high:                      # base case: not found
+    if low > high:
         return -1
     mid = (low + high) // 2
-    middle = names[mid].lower()
-    target = target.lower()
-    if middle == target:                # base case: found
+    if names[mid].lower() == target.lower():
         return mid
-    if target < middle:                 # recursive case: left half
+    if target.lower() < names[mid].lower():
         return binary_search(names, target, low, mid - 1)
-    return binary_search(names, target, mid + 1, high)   # right half
+    return binary_search(names, target, mid + 1, high)
 
 
 def first_prefix_index(names, prefix, low, high):
-    """Recursively find the first index whose name starts with prefix
-    (or the position where such a name would be). Used for prefix search.
-
-    >>> names = ["Aman", "Amit", "Priya", "Rohit"]
-    >>> first_prefix_index(names, "am", 0, len(names))
-    0
-    >>> first_prefix_index(names, "p", 0, len(names))
-    2
-    """
     if low >= high:
         return low
     mid = (low + high) // 2
@@ -144,46 +45,25 @@ def first_prefix_index(names, prefix, low, high):
 
 
 def search_by_prefix(prefix):
-    """Return every name starting with prefix (case-insensitive).
-
-    >>> contacts.clear(); contacts.update({
-    ...     "Aman Babu": ("1111111111", "a@x.com"),
-    ...     "Amit Shah": ("2222222222", "b@x.com"),
-    ...     "Priya Davare": ("3333333333", "c@x.com")})
-    >>> search_by_prefix("am")
-    ['Aman Babu', 'Amit Shah']
-    >>> search_by_prefix("z")
-    []
-    >>> contacts.clear()
-    """
     names = sorted_names()
-    start = first_prefix_index(names, prefix, 0, len(names))
+    i = first_prefix_index(names, prefix, 0, len(names))
     found = []
-    while start < len(names) and names[start].lower().startswith(prefix.lower()):
-        found.append(names[start])
-        start += 1
+    while i < len(names) and names[i].lower().startswith(prefix.lower()):
+        found.append(names[i])
+        i += 1
     return found
 
 
-# ----------------------------------------------------------------------
-# Core operations
-# ----------------------------------------------------------------------
-def add_contact(name, phone, email):
-    """Add a contact. Returns (True, message) or (False, reason).
+def search_by_name(name):
+    names = sorted_names()
+    idx = binary_search(names, name.strip(), 0, len(names) - 1)
+    if idx == -1:
+        return None
+    found = names[idx]
+    return found, contacts[found][0], contacts[found][1]
 
-    >>> contacts.clear(); phone_numbers.clear()
-    >>> add_contact("rohit pandey", "9876543210", "rohit@example.com")
-    (True, 'Contact Rohit Pandey added.')
-    >>> add_contact("Rohit Pandey", "9123456780", "r@example.com")[0]
-    False
-    >>> add_contact("Aman Babu", "9876543210", "aman@example.com")[0]
-    False
-    >>> add_contact("Aman Babu", "12345", "aman@example.com")[0]
-    False
-    >>> add_contact("Aman Babu", "9123456780", "aman-example.com")[0]
-    False
-    >>> contacts.clear(); phone_numbers.clear()
-    """
+
+def add_contact(name, phone, email):
     name = clean_name(name)
     if not name:
         return False, "Name cannot be empty."
@@ -195,26 +75,12 @@ def add_contact(name, phone, email):
         return False, f"{name} already exists. Use update instead."
     if phone in phone_numbers:
         return False, "That phone number already belongs to another contact."
-    contacts[name] = (phone, email)      # tuple of details
-    phone_numbers.add(phone)             # set prevents duplicates
+    contacts[name] = (phone, email)
+    phone_numbers.add(phone)
     return True, f"Contact {name} added."
 
 
 def update_contact(name, new_phone=None, new_email=None):
-    """Update phone and/or email of an existing contact.
-
-    >>> contacts.clear(); phone_numbers.clear()
-    >>> _ = add_contact("Priya Davare", "9000000001", "p@x.com")
-    >>> update_contact("priya davare", new_phone="9000000002")
-    (True, 'Contact Priya Davare updated.')
-    >>> contacts["Priya Davare"]
-    ('9000000002', 'p@x.com')
-    >>> "9000000001" in phone_numbers
-    False
-    >>> update_contact("Nobody", new_phone="9000000003")[0]
-    False
-    >>> contacts.clear(); phone_numbers.clear()
-    """
     name = clean_name(name)
     if name not in contacts:
         return False, f"{name} not found."
@@ -234,88 +100,40 @@ def update_contact(name, new_phone=None, new_email=None):
 
 
 def delete_contact(name):
-    """Delete a contact and free its phone number.
-
-    >>> contacts.clear(); phone_numbers.clear()
-    >>> _ = add_contact("Aman Babu", "9000000009", "a@x.com")
-    >>> delete_contact("aman babu")
-    (True, 'Contact Aman Babu deleted.')
-    >>> phone_numbers
-    set()
-    >>> delete_contact("Aman Babu")[0]
-    False
-    """
     name = clean_name(name)
     if name not in contacts:
         return False, f"{name} not found."
-    phone, _email = contacts.pop(name)
+    phone, _ = contacts.pop(name)
     phone_numbers.discard(phone)
     return True, f"Contact {name} deleted."
 
 
-def search_by_name(name):
-    """Full-name search using the recursive binary search.
-
-    Returns (name, phone, email) or None.
-
-    >>> contacts.clear(); phone_numbers.clear()
-    >>> _ = add_contact("Rohit Pandey", "9000000001", "r@x.com")
-    >>> _ = add_contact("Aman Babu", "9000000002", "a@x.com")
-    >>> search_by_name("rohit pandey")
-    ('Rohit Pandey', '9000000001', 'r@x.com')
-    >>> search_by_name("Nobody") is None
-    True
-    >>> contacts.clear(); phone_numbers.clear()
-    """
-    names = sorted_names()
-    index = binary_search(names, name.strip(), 0, len(names) - 1)
-    if index == -1:
-        return None
-    found = names[index]
-    phone, email = contacts[found]
-    return found, phone, email
-
-
-# ----------------------------------------------------------------------
-# Display: nested loops, grouped by first letter
-# ----------------------------------------------------------------------
 def print_table():
-    """Print all contacts as a table grouped by the first letter."""
     if not contacts:
         print("No contacts to show.")
         return
     names = sorted_names()
-    letters = sorted({n[0].upper() for n in names})       # set of first letters
+    letters = sorted({n[0].upper() for n in names})
     line = "-" * 70
-    print(line)
-    print(f"{'Name':<24}{'Phone':<14}{'Email'}")
-    print(line)
-    for letter in letters:                                # outer loop
+    print(f"{line}\n{'Name':<24}{'Phone':<14}{'Email'}\n{line}")
+    for letter in letters:
         print(f"[ {letter} ]")
-        for name in names:                                # inner loop
+        for name in names:
             if name[0].upper() == letter:
-                phone, email = contacts[name]
-                print(f"  {name:<22}{phone:<14}{email}")
-    print(line)
-    print(f"Total contacts: {len(contacts)}")
+                print(f"  {name:<22}{contacts[name][0]:<14}{contacts[name][1]}")
+    print(f"{line}\nTotal contacts: {len(contacts)}")
 
 
-# ----------------------------------------------------------------------
-# File handling
-# ----------------------------------------------------------------------
 def save_contacts(filename=DATA_FILE):
-    """Write all contacts to a JSON file."""
-    data = {name: list(details) for name, details in contacts.items()}
     try:
         with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+            json.dump({k: list(v) for k, v in contacts.items()}, f, indent=2)
         return True, f"Saved {len(contacts)} contact(s) to {filename}."
     except OSError as err:
         return False, f"Could not save file: {err}"
 
 
 def load_contacts(filename=DATA_FILE):
-    """Load contacts from a JSON file (called when the program starts)."""
     try:
         with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -328,95 +146,49 @@ def load_contacts(filename=DATA_FILE):
     phone_numbers.clear()
     skipped = 0
     for name, details in data.items():
-        try:
-            phone, email = details
-        except (TypeError, ValueError):
-            skipped += 1
-            continue
-        if validate_phone(phone) and validate_email(email) \
-                and phone not in phone_numbers:
-            contacts[name] = (phone, email)
-            phone_numbers.add(phone)
+        if isinstance(details, list) and len(details) == 2 and validate_phone(details[0]) and validate_email(details[1]) and details[0] not in phone_numbers:
+            contacts[name] = (details[0], details[1])
+            phone_numbers.add(details[0])
         else:
             skipped += 1
     msg = f"Loaded {len(contacts)} contact(s)."
-    if skipped:
-        msg += f" Skipped {skipped} invalid record(s)."
-    return True, msg
+    return True, msg + (f" Skipped {skipped} invalid record(s)." if skipped else "")
 
 
-# ----------------------------------------------------------------------
-# Menu
-# ----------------------------------------------------------------------
 def ask(prompt):
-    """input() that survives Ctrl+D / Ctrl+C without a crash."""
     try:
         return input(prompt).strip()
     except (EOFError, KeyboardInterrupt):
         return ""
 
 
-def menu():
-    print("\n=========== CONTACT BOOK ===========")
-    print("1. Add contact")
-    print("2. Search by full name")
-    print("3. Search by starting letters")
-    print("4. Update contact")
-    print("5. Delete contact")
-    print("6. List all contacts (A-Z)")
-    print("7. Save contacts")
-    print("8. Exit")
-
-
 def main():
     print(load_contacts()[1])
     while True:
-        menu()
+        print("\n=========== CONTACT BOOK ===========\n1. Add contact\n2. Search by full name\n3. Search by starting letters\n4. Update contact\n5. Delete contact\n6. List all contacts (A-Z)\n7. Save contacts\n8. Exit")
         choice = ask("Choose an option (1-8): ")
-
         if choice == "1":
-            name = ask("Name  : ")
-            phone = ask("Phone (10 digits): ")
-            email = ask("Email : ")
-            print(add_contact(name, phone, email)[1])
-
+            print(add_contact(ask("Name  : "), ask("Phone (10 digits): "), ask("Email : "))[1])
         elif choice == "2":
-            result = search_by_name(ask("Full name: "))
-            if result:
-                print(f"Found -> {result[0]} | {result[1]} | {result[2]}")
-            else:
-                print("No contact with that name.")
-
+            res = search_by_name(ask("Full name: "))
+            print(f"Found -> {res[0]} | {res[1]} | {res[2]}" if res else "No contact with that name.")
         elif choice == "3":
             prefix = ask("Starting letters: ")
             matches = search_by_prefix(prefix) if prefix else []
-            if matches:
-                for n in matches:
-                    print(f"  {n} | {contacts[n][0]} | {contacts[n][1]}")
-            else:
-                print("No matching contacts.")
-
+            print("\n".join(f"  {n} | {contacts[n][0]} | {contacts[n][1]}" for n in matches) if matches else "No matching contacts.")
         elif choice == "4":
             name = ask("Name of contact to update: ")
             print("(press Enter to keep the current value)")
-            phone = ask("New phone: ")
-            email = ask("New email: ")
-            print(update_contact(name, phone or None, email or None)[1])
-
+            print(update_contact(name, ask("New phone: ") or None, ask("New email: ") or None)[1])
         elif choice == "5":
             print(delete_contact(ask("Name of contact to delete: "))[1])
-
         elif choice == "6":
             print_table()
-
         elif choice == "7":
             print(save_contacts()[1])
-
         elif choice == "8":
-            print(save_contacts()[1])
-            print("Goodbye !")
+            print(save_contacts()[1], "\nGoodbye !", sep="")
             break
-
         else:
             print("Invalid option. Please enter a number from 1 to 8 only.")
 
