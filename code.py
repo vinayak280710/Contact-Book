@@ -6,10 +6,32 @@ phone_numbers = set()
 
 
 def validate_phone(phone):
+    """Return True if phone is exactly ten characters, all digits.
+
+    >>> validate_phone("9876543210")
+    True
+    >>> validate_phone("98765")
+    False
+    >>> validate_phone("98765abcde")
+    False
+    >>> validate_phone("")
+    False
+    """
     return len(phone) == 10 and phone.isdigit()
 
 
 def validate_email(email):
+    """Return True if email has an '@' and a dot after the '@'.
+
+    >>> validate_email("rohit@example.com")
+    True
+    >>> validate_email("rohit.example.com")
+    False
+    >>> validate_email("rohit@examplecom")
+    False
+    >>> validate_email("a b@x.com")
+    False
+    """
     if " " in email or email.count("@") != 1:
         return False
     user, server = email.split("@")
@@ -17,6 +39,11 @@ def validate_email(email):
 
 
 def clean_name(name):
+    """Tidy a name: trim spaces and capitalise each word.
+
+    >>> clean_name("  rohit   pandey ")
+    'Rohit Pandey'
+    """
     return " ".join(name.split()).title()
 
 
