@@ -46,7 +46,6 @@ def clean_name(name):
     """
     return " ".join(name.split()).title()
 
-
 def sorted_names():
     return sorted(contacts, key=str.lower)
 
