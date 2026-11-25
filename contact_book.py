@@ -207,13 +207,13 @@ def main():
             print("(press Enter to keep the current value)")
             print(update_contact(name, ask("New phone: ") or None, ask("New email: ") or None)[1])
         elif choice == "5":
-            print(delete_contact(ask("Name of contact to delete: "))[1])
+            print(delete_contact(ask("Mention name of contact to delete: "))[1])
         elif choice == "6":
             print_table()
         elif choice == "7":
             print(save_contacts()[1])
         elif choice == "8":
-            print(save_contacts()[1], "\nGoodbye !", sep="")
+            print(save_contacts()[1], "\nGoodbye have a great day!", sep="")
             break
         else:
             print("Invalid option. Please enter a number from 1 to 8 only.")
