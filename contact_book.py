@@ -147,7 +147,8 @@ def print_table():
         for name in names:
             if name[0].upper() == letter:
                 print(f"  {name:<22}{contacts[name][0]:<14}{contacts[name][1]}")
-    print(f"{line}\nTotal contacts: {len(contacts)}")
+    print(line)
+    print("Total contacts:",len(contacts))
 
 
 def save_contacts(filename=DATA_FILE):
@@ -182,26 +183,40 @@ def load_contacts(filename=DATA_FILE):
 
 
 def ask(prompt):
-    try:
-        return input(prompt).strip()
-    except (EOFError, KeyboardInterrupt):
-        return ""
-
+     return input(prompt).strip()
 
 def main():
     print(load_contacts()[1])
     while True:
-        print("\n=========== CONTACT BOOK ===========\n1. Add contact\n2. Search by full name\n3. Search by starting letters\n4. Update contact\n5. Delete contact\n6. List all contacts (A-Z)\n7. Save contacts\n8. Exit")
+        print("""=========== CONTACT BOOK ===========
+        1. Add contact
+        2. Search by full name
+        3. Search by starting letters
+        4. Update contact
+        5. Delete contact
+        6. List all contacts (A-Z)
+        7. Save contacts
+        8. Exit""")
         choice = ask("Choose an option (1-8): ")
         if choice == "1":
             print(add_contact(ask("Name  : "), ask("Phone (10 digits): "), ask("Email : "))[1])
         elif choice == "2":
             res = search_by_name(ask("Full name: "))
-            print(f"Found -> {res[0]} | {res[1]} | {res[2]}" if res else "No contact with that name.")
+            if res:
+             print("Found:",res[0],"|" , res[1] ,"|" ,res[2]) 
+            else:
+                "No contact with that name."
         elif choice == "3":
             prefix = ask("Starting letters: ")
-            matches = search_by_prefix(prefix) if prefix else []
-            print("\n".join(f"  {n} | {contacts[n][0]} | {contacts[n][1]}" for n in matches) if matches else "No matching contacts.")
+            if prefix:
+                matches = search_by_prefix(prefix) 
+            else:
+                matches=[]
+            if matches:
+                for n in matches:
+                 print(f"  {n} | {contacts[n][0]} | {contacts[n][1]}" )
+            else:
+                print("No contacts found")
         elif choice == "4":
             name = ask("Name of contact to update: ")
             print("(press Enter to keep the current value)")
@@ -213,11 +228,10 @@ def main():
         elif choice == "7":
             print(save_contacts()[1])
         elif choice == "8":
-            print(save_contacts()[1], "\nGoodbye !", sep="")
+            print(save_contacts()[1])
+            print("Thankyou")
             break
         else:
             print("Invalid option. Please enter a number from 1 to 8 only.")
 
-
-if __name__ == "__main__":
-    main()
+main()
