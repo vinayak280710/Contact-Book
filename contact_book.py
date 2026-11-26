@@ -98,9 +98,9 @@ def add_contact(name, phone, email):
     if not validate_email(email):
         return False, "Email must contain '@' and a dot."
     if name in contacts:
-        return False, f"{name} already exists. Use update instead."
+        return False, f"{name} already exists . Use update option instead."
     if phone in phone_numbers:
-        return False, "That phone number already belongs to another contact."
+        return False, "That entered phone number already belongs to another contact."
     contacts[name] = (phone, email)
     phone_numbers.add(phone)
     return True, f"Contact {name} added."
@@ -114,15 +114,15 @@ def update_contact(name, new_phone=None, new_email=None):
     phone = new_phone if new_phone else old_phone
     email = new_email if new_email else old_email
     if not validate_phone(phone):
-        return False, "Phone must be exactly 10 digits (digits only)."
+        return False, "Phone must be exactly 10 digits and those must digits only."
     if not validate_email(email):
-        return False, "Email must contain '@' and a dot."
+        return False, "Email must contain '@' and a dot(.)"
     if phone != old_phone and phone in phone_numbers:
         return False, "That phone number already belongs to another contact."
     phone_numbers.discard(old_phone)
     phone_numbers.add(phone)
     contacts[name] = (phone, email)
-    return True, f"Contact {name} updated."
+    return True, f"The contact {name} updated."
 
 
 def delete_contact(name):
@@ -136,7 +136,7 @@ def delete_contact(name):
 
 def print_table():
     if not contacts:
-        print("No contacts to show.")
+        print("No contacts are available to show.")
         return
     names = sorted_names()
     letters = sorted({n[0].upper() for n in names})
@@ -148,7 +148,7 @@ def print_table():
             if name[0].upper() == letter:
                 print(f"  {name:<22}{contacts[name][0]:<14}{contacts[name][1]}")
     print(line)
-    print("Total contacts:",len(contacts))
+    print("Total contacts present are :",len(contacts))
 
 
 def save_contacts(filename=DATA_FILE):
@@ -157,7 +157,7 @@ def save_contacts(filename=DATA_FILE):
             json.dump({k: list(v) for k, v in contacts.items()}, f, indent=2)
         return True, f"Saved {len(contacts)} contact(s) to {filename}."
     except OSError as err:
-        return False, f"Could not save file: {err}"
+        return False, f"Could not save the file: {err}"
 
 
 def load_contacts(filename=DATA_FILE):
@@ -222,14 +222,14 @@ def main():
             print("(press Enter to keep the current value)")
             print(update_contact(name, ask("New phone: ") or None, ask("New email: ") or None)[1])
         elif choice == "5":
-            print(delete_contact(ask("Name of contact to delete: "))[1])
+            print(delete_contact(ask("Mention name of contact to delete: "))[1])
         elif choice == "6":
             print_table()
         elif choice == "7":
             print(save_contacts()[1])
         elif choice == "8":
-            print(save_contacts()[1])
-            print("Thankyou")
+            print(save_contacts()[1],)
+            print("Goodbye have a great day!")
             break
         else:
             print("Invalid option. Please enter a number from 1 to 8 only.")
